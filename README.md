@@ -66,6 +66,22 @@ GridWise addresses these challenges through **four core intelligence modules**:
 | **D — Explainability Layer** | Make every AI output understandable for non-technical planners | SHAP TreeExplainer for feature attribution |
 | **E — Localized Interface** | Full Kannada/English toggle for BESCOM field operators | Custom i18n Hook + Noto Sans Kannada Font |
 
+### 🔄 How GridWise Works — The Big Picture
+
+```mermaid
+flowchart LR
+    A["📊 Data Collection\n(EV registrations,\ntransformer loads,\ncharging sessions)"] --> B["🧠 AI Brain\n(Forecasting,\nOptimization,\nClustering)"]
+    B --> C["📋 Smart Recommendations\n(When to charge,\nwhere to build,\nalert operators)"]
+    C --> D["👨‍💼 BESCOM Operator\n(Views dashboard,\ntakes action,\nmanages grid)"]
+
+    style A fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:12
+    style B fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:12
+    style C fill:#00C896,stroke:#009970,color:#fff,rx:12
+    style D fill:#FF8C42,stroke:#CC6E30,color:#fff,rx:12
+```
+
+> **In simple words:** GridWise collects electricity and EV data → runs AI models to predict demand → generates smart recommendations → shows everything on an easy-to-use dashboard for BESCOM operators.
+
 Each module feeds into a **real-time React dashboard** with live WebSocket streaming, interactive GIS maps, and exportable reports.
 
 ---
@@ -309,6 +325,57 @@ Voltaris-AI/
 
 GridWise uses a **hybrid data strategy** — no real BESCOM data is required. The `generate_gridwise_data.py` script produces **8 interdependent datasets** with seeded reproducibility (`np.random.seed(42)`).
 
+### 🔄 Data Flow — How Information Moves Through the System
+
+```mermaid
+flowchart TD
+    subgraph Step1["Step 1 — Generate Synthetic Data"]
+        GEN["🏭 Data Generator\n(generate_gridwise_data.py)"]
+        GEN --> D1["📈 EV Demand\nTimeseries\n(350K rows)"]
+        GEN --> D2["🔌 Transformer\nLoad Data\n(262K rows)"]
+        GEN --> D3["🚗 EV Registrations\n& Charging Sessions"]
+        GEN --> D4["📍 Candidate Sites\n& Zone Boundaries"]
+    end
+
+    subgraph Step2["Step 2 — Store in Database"]
+        DB[("🗄️ PostgreSQL\nDatabase\n(Supabase)")]
+    end
+
+    subgraph Step3["Step 3 — AI Models Read Data"]
+        ML1["🔮 Demand\nForecaster"]
+        ML2["⚡ Charging\nScheduler"]
+        ML3["📍 Infrastructure\nPlanner"]
+    end
+
+    subgraph Step4["Step 4 — Results to Dashboard"]
+        DASH["🖥️ Operator\nDashboard"]
+    end
+
+    D1 --> DB
+    D2 --> DB
+    D3 --> DB
+    D4 --> DB
+    DB --> ML1
+    DB --> ML2
+    DB --> ML3
+    ML1 --> DASH
+    ML2 --> DASH
+    ML3 --> DASH
+
+    style Step1 fill:#1a1a2e,stroke:#4A90D9,color:#fff
+    style Step2 fill:#1a1a2e,stroke:#00C896,color:#fff
+    style Step3 fill:#1a1a2e,stroke:#7B61FF,color:#fff
+    style Step4 fill:#1a1a2e,stroke:#FF8C42,color:#fff
+    style GEN fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    style DB fill:#00C896,stroke:#009970,color:#fff,rx:8
+    style DASH fill:#FF8C42,stroke:#CC6E30,color:#fff,rx:8
+    style ML1 fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+    style ML2 fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+    style ML3 fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+```
+
+> **In simple words:** We first create realistic mock data → store it in a database → AI models read the data and learn patterns → results are shown on the dashboard.
+
 ### Generated Datasets
 
 | # | Dataset | Rows | Size | Granularity |
@@ -376,6 +443,49 @@ Output is written to the `./output/` directory. The generator prints row counts 
 
 ## 🧠 ML Intelligence Layer
 
+### 🧩 How All AI Modules Work Together
+
+```mermaid
+flowchart TD
+    INPUT["📥 Input\nZone ID + Time Range"] --> A
+
+    subgraph A["Module A — Demand Forecasting"]
+        A1["📊 Look at past\nelectricity usage"] --> A2["🧠 AI predicts\nfuture demand"] --> A3["📈 Output: Expected\nload in kW"]
+    end
+
+    A3 --> B
+    A3 --> D
+
+    subgraph B["Module B — Smart Charging"]
+        B1["⚡ Compare predicted load\nvs safe capacity"] --> B2["🧮 Math optimizer finds\nbest charging times"] --> B3["📋 Output: Charge Now,\nDefer, or Optimal Window"]
+    end
+
+    subgraph C["Module C — Infrastructure Planning"]
+        C1["📍 Map all candidate\ncharger locations"] --> C2["🎯 AI groups locations\ninto clusters"] --> C3["🏗️ Output: Best places\nto build new chargers"]
+    end
+
+    subgraph D["Module D — Explainability"]
+        D1["🔍 SHAP analyzes\nwhy AI predicted this"] --> D2["📊 Output: Top reasons\nbehind every prediction"]
+    end
+
+    INPUT --> C
+
+    B3 --> OPERATOR["👨‍💼 BESCOM Operator\ngets clear, actionable advice"]
+    C3 --> OPERATOR
+    D2 --> OPERATOR
+
+    style A fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    style B fill:#00C896,stroke:#009970,color:#fff
+    style C fill:#FF8C42,stroke:#CC6E30,color:#fff
+    style D fill:#7B61FF,stroke:#5A3FD9,color:#fff
+    style OPERATOR fill:#E8475F,stroke:#B83649,color:#fff,rx:12
+    style INPUT fill:#555,stroke:#888,color:#fff,rx:12
+```
+
+> **In simple words:** The AI first predicts how much electricity will be needed → then figures out the best charging times → identifies where to build new chargers → and explains every decision in plain language.
+
+---
+
 ### Module A — XGBoost Demand Forecasting
 
 The forecasting engine (`backend/app/ml/forecast.py`) uses a **ForecastService singleton** that manages three XGBoost models for point predictions and confidence intervals.
@@ -442,6 +552,35 @@ forecast_service.load_models()
 # → If missing, calls self.train() which queries the DB
 ```
 
+### 🔮 How Demand Forecasting Works — Step by Step
+
+```mermaid
+flowchart LR
+    subgraph Step1["Step 1"]
+        S1["📅 Take a timestamp\n(e.g., June 15, 7 PM)"]
+    end
+    subgraph Step2["Step 2"]
+        S2["🔧 Extract features:\n• Hour of day\n• Weekend or not\n• Peak hour or not\n• Which zone\n• Season"]
+    end
+    subgraph Step3["Step 3"]
+        S3["🧠 Three AI models\nrun simultaneously:\n• Main prediction\n• Low estimate\n• High estimate"]
+    end
+    subgraph Step4["Step 4"]
+        S4["📊 Output:\n487 kW predicted\n(range: 412 – 562 kW)"]
+    end
+
+    S1 --> S2 --> S3 --> S4
+
+    style Step1 fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    style Step2 fill:#7B61FF,stroke:#5A3FD9,color:#fff
+    style Step3 fill:#00C896,stroke:#009970,color:#fff
+    style Step4 fill:#FF8C42,stroke:#CC6E30,color:#fff
+```
+
+> **In simple words:** The AI looks at *when* (time, day, season) and *where* (which zone) → extracts key patterns → runs 3 models to give a prediction with a confidence range.
+
+---
+
 ### Module B — SHAP Explainability
 
 The `ExplainerService` (`backend/app/ml/explainer.py`) wraps SHAP's `TreeExplainer` to provide feature attribution for every prediction.
@@ -479,6 +618,37 @@ The `ExplainerService` (`backend/app/ml/explainer.py`) wraps SHAP's `TreeExplain
 #### Caching Strategy
 
 SHAP values are cached in Redis with a **5-minute TTL**, keyed by `shap:{zone_id}:{hourly_timestamp}`. Timestamps are rounded to the hour for stable cache keys.
+
+### 🔍 How Explainability Works — Why Did the AI Say This?
+
+```mermaid
+flowchart TD
+    Q["❓ Question:\nWhy does the AI predict\nhigh demand at 7 PM\nin Whitefield?"] --> SHAP
+
+    subgraph SHAP["SHAP Explainer"]
+        direction TB
+        S1["🔍 Analyze each\ninput feature's\ncontribution"]
+        S1 --> S2["📊 Rank features\nby importance"]
+    end
+
+    SHAP --> R
+
+    subgraph R["📋 Answer"]
+        direction TB
+        R1["🕐 Hour = 7 PM → +89 kW\n(strongest driver)"]
+        R2["⚡ Peak hour = Yes → +45 kW"]
+        R3["📍 Zone = Whitefield → +29 kW"]
+        R4["📅 Day = Monday → -12 kW\n(slightly less demand)"]
+    end
+
+    style Q fill:#E8475F,stroke:#B83649,color:#fff,rx:12
+    style SHAP fill:#7B61FF,stroke:#5A3FD9,color:#fff
+    style R fill:#00C896,stroke:#009970,color:#fff
+```
+
+> **In simple words:** The operator asks "Why this prediction?" → SHAP breaks it down → shows exactly which factors pushed the prediction up or down, like a doctor explaining a diagnosis.
+
+---
 
 ### Module C — LP Charging Scheduler
 
@@ -526,6 +696,45 @@ If the LP solver returns infeasible (e.g., extreme edge cases), the system falls
 | > 65% capacity | `OPTIMAL_WINDOW` | 22:00 – 07:00 |
 | ≤ 65% capacity | `CHARGE_NOW` | Current hour |
 
+### ⚡ How Smart Charging Works — Step by Step
+
+```mermaid
+flowchart TD
+    subgraph Step1["Step 1 — Check Current Load"]
+        S1A["📊 Get predicted demand\nfor each hour of the day"]
+        S1B["⚠️ Identify peak hours\n(6 PM - 10 PM)"]
+        S1A --> S1B
+    end
+
+    subgraph Step2["Step 2 — Run Optimizer"]
+        S2A["🧮 Math solver calculates:\nHow much load to shift\nfrom peak to off-peak"]
+        S2B["🎯 Goal: Keep load\nbelow 75% of peak"]
+        S2A --> S2B
+    end
+
+    subgraph Step3["Step 3 — Generate Advice"]
+        S3A["🟢 CHARGE NOW\n(Grid is fine)"]
+        S3B["🟡 OPTIMAL WINDOW\n(Better time available)"]
+        S3C["🔴 DEFER\n(Grid is stressed,\ncharge later)"]
+    end
+
+    Step1 --> Step2
+    Step2 --> S3A
+    Step2 --> S3B
+    Step2 --> S3C
+
+    style Step1 fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    style Step2 fill:#7B61FF,stroke:#5A3FD9,color:#fff
+    style Step3 fill:#1a1a2e,stroke:#00C896,color:#fff
+    style S3A fill:#00C896,stroke:#009970,color:#fff,rx:8
+    style S3B fill:#FFB347,stroke:#CC8E35,color:#333,rx:8
+    style S3C fill:#E8475F,stroke:#B83649,color:#fff,rx:8
+```
+
+> **In simple words:** The system checks when the grid will be overloaded → uses math to figure out how to spread the load evenly → tells EV owners: charge now (safe), wait for a better time, or please defer.
+
+---
+
 ### Module D — Infrastructure Planning (K-Means + KDE)
 
 The `ClusteringService` (`backend/app/ml/clustering.py`) identifies EV infrastructure hotspots using dual spatial analysis.
@@ -564,6 +773,44 @@ composite_score = (0.35 × demand_score)
 | **Gap Score** | 25% | Inverse of existing charger count within 500m |
 | **Transformer Score** | 25% | Transformer headroom / 300 kW (capped at 1.0) |
 | **Access Score** | 15% | Road type: highway=1.0, arterial=0.8, collector=0.55, residential=0.3 |
+
+### 📍 How Infrastructure Planning Works — Step by Step
+
+```mermaid
+flowchart TD
+    subgraph Step1["Step 1 — Gather Location Data"]
+        L1["📍 200 candidate sites\nacross Bengaluru"]
+        L2["📊 EV demand density,\ntransformer data, road access"]
+        L1 --> L2
+    end
+
+    subgraph Step2["Step 2 — AI Analysis"]
+        direction LR
+        A1["🎯 K-Means Clustering\nGroup nearby sites\ninto 5 hotspot zones"]
+        A2["🗺️ KDE Heatmap\nVisualize demand density\nacross 50×50 grid"]
+    end
+
+    subgraph Step3["Step 3 — Score Each Site"]
+        SC["🏆 Composite Score"]
+        SC --> SC1["35% — How much\nEV demand here?"]
+        SC --> SC2["25% — Any chargers\nnearby already?"]
+        SC --> SC3["25% — Can the transformer\nhandle it?"]
+        SC --> SC4["15% — Is the road\naccessible?"]
+    end
+
+    subgraph Step4["Step 4 — Recommendation"]
+        REC["🏗️ Ranked list of\nbest locations to\nbuild new EV chargers"]
+    end
+
+    Step1 --> Step2 --> Step3 --> Step4
+
+    style Step1 fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    style Step2 fill:#7B61FF,stroke:#5A3FD9,color:#fff
+    style Step3 fill:#FF8C42,stroke:#CC6E30,color:#fff
+    style Step4 fill:#00C896,stroke:#009970,color:#fff
+```
+
+> **In simple words:** We look at all possible locations → use AI to find clusters of high demand → score each site on 4 factors → recommend the top spots to build new EV chargers.
 
 ---
 
@@ -843,6 +1090,35 @@ Calculates a 0-100 health score for every zone based on current load, peak forec
 
 ---
 
+### 🚨 How the Alert System Works
+
+```mermaid
+flowchart TD
+    subgraph Loop["Every 60 Seconds — Background Monitor"]
+        direction TB
+        C1["🔍 Check each zone's\ncurrent load forecast"]
+        C1 --> C2{"⚡ Is load above\nsafe capacity?"}
+        C2 -->|"Over 100%"| CRIT["🔴 Create CRITICAL alert\n(Immediate risk!)"]
+        C2 -->|"Over 85%"| WARN["🟡 Create WARNING alert\n(Approaching limit)"]
+        C2 -->|"Under 85%"| SAFE["🟢 No alert needed\n(Grid is healthy)"]
+    end
+
+    CRIT --> DASH["🖥️ Alert appears on\noperator's dashboard"]
+    WARN --> DASH
+    DASH --> ACK["👨‍💼 Operator acknowledges\nand takes action"]
+
+    style Loop fill:#1a1a2e,stroke:#E8475F,color:#fff
+    style CRIT fill:#E8475F,stroke:#B83649,color:#fff,rx:8
+    style WARN fill:#FFB347,stroke:#CC8E35,color:#333,rx:8
+    style SAFE fill:#00C896,stroke:#009970,color:#fff,rx:8
+    style DASH fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    style ACK fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+```
+
+> **In simple words:** A background watchdog checks the grid every 60 seconds → if a zone is overloaded, it creates an alert → the operator sees it on their screen and takes action.
+
+---
+
 ### WebSocket Protocol
 
 #### `WS /ws/live-load?zone_id=Z01`
@@ -967,6 +1243,44 @@ class SeverityEnum(str, Enum):
 ## 🖥 Frontend Dashboard
 
 The frontend is a **Next.js 16** application using the App Router pattern with React 19. All pages share a persistent sidebar navigation and top bar layout.
+
+### 👨‍💼 Operator's Daily Workflow — How a BESCOM Officer Uses GridWise
+
+```mermaid
+flowchart TD
+    START(["☀️ Start of Day"]) --> A
+
+    A["1️⃣ Open Dashboard\nSee today's system status:\nNORMAL / WARNING / CRITICAL"] --> B
+
+    B["2️⃣ Check Zone Health\nSee all 10 zones with\nhealth scores A to F"] --> C
+
+    C{"Any zones at risk?"}
+    C -->|"Yes"| D["3️⃣ Review Forecast\nSee 48-hour predicted\ndemand with confidence bands"]
+    C -->|"No"| G
+
+    D --> E["4️⃣ Check Scheduler\nSee recommended charge/defer\ntimes for at-risk zones"]
+
+    E --> F["5️⃣ Take Action\nSend advisory to EV owners\nto defer charging at peak hours"]
+
+    F --> G["6️⃣ Monitor Alerts\nAlerts auto-refresh every 30s\nAcknowledge critical ones"]
+
+    G --> H["7️⃣ Plan Infrastructure\nUse map to identify where\nnew chargers are needed"]
+
+    H --> END(["📊 Export Reports\nfor management review"])
+
+    style START fill:#00C896,stroke:#009970,color:#fff,rx:20
+    style END fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:20
+    style A fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    style B fill:#4A90D9,stroke:#2C5F8A,color:#fff,rx:8
+    style C fill:#FFB347,stroke:#CC8E35,color:#333,rx:8
+    style D fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+    style E fill:#7B61FF,stroke:#5A3FD9,color:#fff,rx:8
+    style F fill:#E8475F,stroke:#B83649,color:#fff,rx:8
+    style G fill:#FF8C42,stroke:#CC6E30,color:#fff,rx:8
+    style H fill:#00C896,stroke:#009970,color:#fff,rx:8
+```
+
+> **In simple words:** Every morning, the BESCOM officer opens the dashboard → checks which zones are at risk → reviews forecasts and schedules → sends charging advisories → monitors alerts throughout the day → plans for future infrastructure.
 
 ### Screen Overview
 
