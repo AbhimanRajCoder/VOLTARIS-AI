@@ -1,0 +1,446 @@
+
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>GridWise E2E Test Report</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+                .container { max-width: 1200px; margin: auto; }
+                h1, h2 { color: #00e676; }
+                .scorecard { display: flex; gap: 20px; margin-bottom: 30px; }
+                .card { background: #1e1e1e; padding: 20px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #333; }
+                .card.pass { border-top: 4px solid #00e676; }
+                .card.fail { border-top: 4px solid #ff5252; }
+                .card.warn { border-top: 4px solid #ffd740; }
+                .card h3 { margin: 0; color: #888; text-transform: uppercase; font-size: 14px; }
+                .card .val { font-size: 32px; font-weight: bold; margin-top: 10px; }
+                table { width: 100%; border-collapse: collapse; background: #1e1e1e; border-radius: 8px; overflow: hidden; margin-bottom: 30px; }
+                th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #333; }
+                th { background: #252525; color: #00e676; text-transform: uppercase; font-size: 12px; }
+                tr.fail { background: #2c1a1a; }
+                tr.warn { background: #2c251a; }
+                .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+                .badge.pass { background: #00e676; color: #000; }
+                .badge.fail { background: #ff5252; color: #fff; }
+                .badge.warn { background: #ffd740; color: #000; }
+                .suggestions { background: #1e1e1e; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-top: 20px; }
+                .suggestions ul { color: #ff5252; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>GridWise E2E Test Report</h1>
+                <p>Generated at: 2026-05-04 13:05:12</p>
+                
+                <div class="scorecard">
+                    <div class="card pass"><h3>Passed</h3><div class="val">43</div></div>
+                    <div class="card fail"><h3>Failed</h3><div class="val">0</div></div>
+                    <div class="card warn"><h3>Warnings</h3><div class="val">1</div></div>
+                    <div class="card"><h3>Total</h3><div class="val">44</div></div>
+                </div>
+
+                <h2>Phase Results</h2>
+                <table>
+                    <thead>
+                        <tr><th>Phase</th><th>Check</th><th>Status</th><th>Message</th><th>Time</th></tr>
+                    </thead>
+                    <tbody>
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Env Vars Present</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Missing: []</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>DB SELECT 1</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>2293.54ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Table Row Counts</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Counts: {'zones': 10, 'zone_demand_forecast': 800800, 'charging_recommendation': 1728, 'infra_site_candidate': 200, 'grid_alert': 472344}</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Schema Validation</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Health Check</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Status: 200, Body: {'status': 'ok', 'model_version': 'v1.0', 'db': 'connected', 'redis': 'connected', 'background_monitor': 'running', 'uptime_seconds': 14}</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Redis Ping</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 1</td>
+                <td>Model Files Exist</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Missing: []</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Router Prefixes</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Missing: []</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Forecast Demand List</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>All 10 Zones</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Failed: []</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Forecast Explain SHAP</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Resp: {"zone_id":"Z01","timestamp":"2024-12-28T23:45:00","predicted_kw":310.2,"base_value":480.65,"shap_values":{"hour":-39.0187,"day_of_week":-0.6566,"month":37.9523,"is_weekend":1.0303,"is_peak_hour":-77.973,"zone_id_encoded":-3.3804,"hour_sin":-18.6246,"hour_cos":-69.7856},"top_feature":"is_peak_hour","explanation":"is_peak_hour is the strongest driver, decreasing the prediction by 78.0 kW"}</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Schedule Optimize 24h</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Schedule Comparison</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Infra Hotspots GeoJSON</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Infra Recommend Order</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Infra Site Detail</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Grid Alerts Severity</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>Acknowledge Alert</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 2</td>
+                <td>API Docs</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>Future Forecast (ML)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>SHAP Peak vs Off-Peak</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>Optimizer Running (LP)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>K-Means Centroids</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>Model Version Field</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 3</td>
+                <td>Full Pipeline Flow</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache Flush & MISS</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache HIT Performance</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td>Duration: 3.69ms</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache Coverage</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache Invalidation (Alerts)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>WebSocket Connection & Data</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>WebSocket Filtering</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Response Time Header</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Background Monitor Status</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache Stats API</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Phase 4</td>
+                <td>Cache Flush API</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Integration</td>
+                <td>Demo Flow Sequence</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Integration</td>
+                <td>Data Consistency</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="warn">
+                <td>Integration</td>
+                <td>Redis Graceful Failure</td>
+                <td><span class="badge warn">WARN</span></td>
+                <td>Manual verification required</td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Integration</td>
+                <td>Concurrency (10 reqs)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Benchmarks</td>
+                <td>Benchmark: Forecast Demand (MISS)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Benchmarks</td>
+                <td>Benchmark: Forecast Demand (HIT)</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Benchmarks</td>
+                <td>Benchmark: Schedule Comparison</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Benchmarks</td>
+                <td>Benchmark: Infra Hotspots</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            
+            <tr class="pass">
+                <td>Benchmarks</td>
+                <td>Benchmark: Health Check</td>
+                <td><span class="badge pass">PASS</span></td>
+                <td></td>
+                <td>0.00ms</td>
+            </tr>
+            </tbody>
+                </table>
+
+                <h2>Performance Benchmarks</h2>
+                <table>
+                    <thead>
+                        <tr><th>Endpoint</th><th>P50</th><th>P95</th></tr>
+                    </thead>
+                    <tbody>
+            <tr>
+                <td>Forecast Demand (MISS)</td>
+                <td>2.28ms</td>
+                <td>1051.13ms</td>
+            </tr>
+            
+            <tr>
+                <td>Forecast Demand (HIT)</td>
+                <td>1.31ms</td>
+                <td>3.19ms</td>
+            </tr>
+            
+            <tr>
+                <td>Schedule Comparison</td>
+                <td>2.47ms</td>
+                <td>791.58ms</td>
+            </tr>
+            
+            <tr>
+                <td>Infra Hotspots</td>
+                <td>1.33ms</td>
+                <td>5.13ms</td>
+            </tr>
+            
+            <tr>
+                <td>Health Check</td>
+                <td>0.74ms</td>
+                <td>1.36ms</td>
+            </tr>
+            </tbody>
+                </table>
+
+                <div class='suggestions'><h2>Issues & Fix Suggestions</h2><ul>
+                <li><strong>Redis Graceful Failure:</strong> Manual verification required</li>
+                </ul></div>
+            </div>
+        </body>
+        </html>
+        
