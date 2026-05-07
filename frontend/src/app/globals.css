@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+@theme {
+  /* Core Brand - Professional Deep Navy */
+  --color-bg-primary: #fcfcfd;
+  --color-bg-surface: rgba(255, 255, 255, 0.8);
+  --color-bg-elevated: #f8fafc;
+  
+  --color-border-subtle: rgba(226, 232, 240, 0.6);
+  --color-border-bright: #cbd5e1;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  
+  --color-accent: #1e293b; /* Sophisticated slate for main elements */
+  --color-accent-dim: rgba(30, 41, 59, 0.08);
+  --color-accent-hover: #0f172a;
+  
+  --color-brand-primary: #2563eb; /* Electric Blue for key actions */
+  
+  --color-warning: #ea580c;
+  --color-danger: #be123c;
+  --color-success: #059669;
+  
+  --color-chart-blue: #3b82f6;
+  --color-chart-purple: #8b5cf6;
+  --color-chart-teal: #14b8a6;
+}
+
+:root {
+  color-scheme: light;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+}
+
+html, body {
+  background-color: var(--color-bg-primary);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.03) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.03) 0px, transparent 50%);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+  font-feature-settings: "cv02", "cv05", "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+
+[data-lang="kn"] {
+  font-family: var(--font-kannada), sans-serif !important;
+}
+
+/* ── Typography ────────────────────────────────────────────────── */
+.page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-text-primary);
+}
+
+.section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+/* ── Cards & Containers ────────────────────────────────────────── */
+.card {
+  background: var(--color-bg-surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+  border-color: var(--color-border-bright);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.card-elevated {
+  background: white;
+  border: 1px solid var(--color-border-subtle);
+  border-radius: 1rem;
+  box-shadow: var(--shadow-md);
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-bright);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-bright) transparent;
+}
+
+/* ── Skeleton animation ────────────────────────────────────────── */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(to right, #f1f5f9 4%, #e2e8f0 25%, #f1f5f9 36%);
+  background-size: 1000px 100%;
+}
+
+/* ── Transitions ───────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: countUp 0.4s ease-out;
+}
+
+/* ── Table rows ────────────────────────────────────────────────── */
+.table-row-hover:hover {
+  background: var(--color-bg-elevated);
+}
+
+/* ── Accessibility ─────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .animate-fade-in,
+  .animate-count-up {
+    animation: none;
+  }
+}
+
+/* ── Print styles ──────────────────────────────────────────────── */
+@media print {
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
