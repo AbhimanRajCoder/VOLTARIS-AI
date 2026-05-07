@@ -65,6 +65,36 @@ class ForecastService:
             ]
         )
 
+    # ── data loading ──────────────────────────────────────────────────────
+    def _load_training_data(self) -> pd.DataFrame:
+        """Load training data from DB; fall back to synthetic data if unavailable."""
+        try:
+            from app.utils.db import engine
+            df = pd.read_sql(
+                "SELECT zone_id, timestamp, predicted_kw "
+                "FROM zone_demand_forecast ORDER BY timestamp",
+                engine,
+            )
+            if len(df) >= 100:
+                return df
+            logger.warning("DB returned %d rows — too few; using synthetic fallback", len(df))
+        except Exception as exc:
+            logger.warning("DB unavailable for training (%s); using synthetic data", exc)
+
+        # Synthetic fallback — 10 000 hourly rows across 5 zones
+        rng = np.random.default_rng(42)
+        zones = ["Z01", "Z02", "Z03", "Z04", "Z05"]
+        base = pd.Timestamp("2024-01-01")
+        timestamps = pd.date_range(base, periods=2000, freq="h")
+        records = []
+        for zone in zones:
+            for ts in timestamps:
+                hour = ts.hour
+                base_kw = 300 + 200 * np.sin(2 * math.pi * hour / 24)
+                noise = rng.normal(0, 20)
+                records.append({"zone_id": zone, "timestamp": ts, "predicted_kw": max(50, base_kw + noise)})
+        return pd.DataFrame(records)
+
     # ── load ─────────────────────────────────────────────────────────────
     def load_models(self):
         if self._loaded:
@@ -82,14 +112,8 @@ class ForecastService:
     # ── train ────────────────────────────────────────────────────────────
     def train(self) -> dict:
         """Train 3 XGBoost models and persist to MODEL_DIR."""
-        from app.utils.db import engine  # defer import
-
-        logger.info("Loading training data from Supabase …")
-        df = pd.read_sql(
-            "SELECT zone_id, timestamp, predicted_kw "
-            "FROM zone_demand_forecast ORDER BY timestamp",
-            engine,
-        )
+        logger.info("Loading training data from database …")
+        df = self._load_training_data()
         logger.info("Loaded %d rows", len(df))
 
         # Encode zones

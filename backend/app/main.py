@@ -58,6 +58,16 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logging.error(f"Error during startup: {e}")
 
+    # ── Pre-warm ML models so the first request is instant ──────────────
+    try:
+        from app.ml.forecast import forecast_service
+        import asyncio as _asyncio
+        loop = _asyncio.get_event_loop()
+        await loop.run_in_executor(None, forecast_service.load_models)
+        logging.info("Forecast models pre-loaded.")
+    except Exception as e:
+        logging.warning(f"Model pre-load skipped: {e}")
+
     alert_monitor_task = asyncio.create_task(monitor_grid_alerts())
     logging.info("Background alert monitor started")
 
