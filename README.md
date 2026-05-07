@@ -21,24 +21,24 @@ Voltaris AI **never modifies the live grid**. It is a pure intelligence layer th
 
 ## Table of Contents
 
-1. [Problem Statement](#-problem-statement)
-2. [Solution Overview](#-solution-overview)
-3. [Features](#-features)
-4. [System Architecture](#-system-architecture)
-5. [Technology Stack](#-technology-stack)
-6. [Project Structure](#-project-structure)
-7. [Data Pipeline & Synthetic Generation](#-data-pipeline--synthetic-generation)
-8. [ML Intelligence Layer](#-ml-intelligence-layer)
-9. [Backend API Reference](#-backend-api-reference)
-10. [API Developer Portal](#-api-developer-portal)
-11. [Frontend Dashboard](#-frontend-dashboard)
-12. [Database Schema](#-database-schema)
-13. [Getting Started](#-getting-started)
-14. [Environment Variables](#-environment-variables)
-15. [Docker Deployment](#-docker-deployment)
-16. [Performance & Caching](#-performance--caching)
-17. [Expected Impact](#-expected-impact)
-18. [Development Notes](#-development-notes)
+1. [Problem Statement](#problem-statement)
+2. [Solution Overview](#solution-overview)
+3. [Features](#features)
+4. [System Architecture](#system-architecture)
+5. [Technology Stack](#technology-stack)
+6. [Project Structure](#project-structure)
+7. [Data Pipeline & Synthetic Generation](#data-pipeline--synthetic-generation)
+8. [ML Intelligence Layer](#ml-intelligence-layer)
+9. [Backend API Reference](#backend-api-reference)
+10. [API Developer Portal](#api-developer-portal)
+11. [Frontend Dashboard](#frontend-dashboard)
+12. [Database Schema](#database-schema)
+13. [Getting Started](#getting-started)
+14. [Environment Variables](#environment-variables)
+15. [Docker Deployment](#docker-deployment)
+16. [Performance & Caching](#performance--caching)
+17. [Expected Impact](#expected-impact)
+18. [Development Notes](#development-notes)
 
 ---
 
@@ -178,63 +178,44 @@ A standalone **Vite + React** portal for external developers and API partners se
 
 ## System Architecture
 
-```
+```mermaid
+flowchart TD
+    subgraph Frontend ["Frontend (Next.js 16 + React 19)"]
+        UI["Operator Dashboard"]
+        UI_API["API Developer Portal"]
+        SWR["SWR + Axios + WebSockets"]
+    end
 
-              VOLTARIS AI ARCHITECTURE              
+    subgraph Backend ["Backend (FastAPI + Python 3.11)"]
+        API["REST API Endpoints"]
+        WS["WebSocket Manager"]
+        Forecasting["XGBoost Forecasting Layer"]
+        Optimization["LP Optimization (PuLP)"]
+        Planner["Infra Site Ranking (K-Means)"]
+        Explain["Explainability Layer (SHAP)"]
+        Monitor["Background Grid Monitor"]
+    end
 
-                                       
-   
-           FRONTEND (Next.js 16 + React 19)          
-                                      
-  /dashboard  /forecast  /scheduler  /infra-map  /alerts     
-       
-   KPI Tiles 48h Chart Heatmap   Leaflet  Alert    
-   Live Feed SHAP Bars LP Comp.  KDE+Sites Feed     
-       
-                                   
-          
-              SWR + Axios + WebSocket             
-   
-                                      
-              HTTP REST + WS                  
-                                      
-   
-            BACKEND (FastAPI + Python 3.11)           
-                                      
-        
-   Forecast   Schedule    Infra     Alerts     
-    Router    Router    Router     Router     
-        
-                                   
-       
-   XGBoost     PuLP    K-Means    Background   
-   Forecast   LP Solver   + KDE     Monitor    
-   + SHAP    + Fallback  + Scoring   (60s loop)   
-       
-                                      
-       
-    Redis Cache    WebSocket Mgr    Response Timer    
-   (per-endpoint    (ConnectionMgr   (middleware,     
-    TTL configs)    + LiveLoad)     slow-request)    
-       
-   
-                                      
-   
-           DATA LAYER                      
-                                      
-        
-   PostgreSQL        Synthetic Data Generator        
-   (Supabase)        (generate_gridwise_data.py)       
-                                    
-    zones        ev_demand_timeseries (350K rows)   
-    zone_demand       ev_registrations (5K rows)      
-    charging_rec      charging_stations (120 rows)     
-    infra_site       transformer_load (262K rows)     
-    grid_alert       candidate_sites (200 rows)      
-                zone_config + boundaries       
-        
-   
+    subgraph Data ["Data & Storage Layer"]
+        DB[(PostgreSQL + PostGIS)]
+        Redis[(Redis Cache)]
+        Gen["Synthetic Data Generator"]
+    end
 
+    UI --> API
+    UI --> WS
+    UI_API --> API
+    API --> SWR
+    API --> Forecasting
+    API --> Optimization
+    API --> Planner
+    API --> Explain
+    Monitor --> DB
+    Forecasting --> DB
+    Optimization --> DB
+    Planner --> DB
+    Gen --> DB
+    API --> Redis
 ```
 
 ---
@@ -428,7 +409,7 @@ Voltaris-AI/
 
 Voltaris AI uses a **hybrid data strategy** no real BESCOM data is required. The `generate_gridwise_data.py` script produces **8 interdependent datasets** with seeded reproducibility (`np.random.seed(42)`).
 
-### Data Flow How Information Moves Through the System
+### Data Flow — How Information Moves Through the System
 
 ```mermaid
 flowchart TD
@@ -589,7 +570,7 @@ flowchart TD
 
 ---
 
-### Module A XGBoost Demand Forecasting
+### Module A — XGBoost Demand Forecasting
 
 The forecasting engine (`backend/app/ml/forecast.py`) uses a **ForecastService singleton** that manages three XGBoost models for point predictions and confidence intervals.
 
@@ -684,7 +665,7 @@ flowchart LR
 
 ---
 
-### Module B SHAP Explainability
+### Module B — SHAP Explainability
 
 The `ExplainerService` (`backend/app/ml/explainer.py`) wraps SHAP's `TreeExplainer` to provide feature attribution for every prediction.
 
@@ -753,7 +734,7 @@ flowchart TD
 
 ---
 
-### Module C LP Charging Scheduler
+### Module C — LP Charging Scheduler
 
 The `OptimizerService` (`backend/app/ml/optimizer.py`) uses **PuLP's CBC solver** to compute optimal charge/defer recommendations.
 
@@ -838,7 +819,7 @@ flowchart TD
 
 ---
 
-### Module D Infrastructure Planning (K-Means + KDE)
+### Module D — Infrastructure Planning (K-Means + KDE)
 
 The `ClusteringService` (`backend/app/ml/clustering.py`) identifies EV infrastructure hotspots using dual spatial analysis.
 
@@ -1269,62 +1250,60 @@ Voltaris AI uses **5 PostgreSQL tables** managed by SQLAlchemy ORM with PostGIS 
 
 ### Entity Relationship Diagram
 
-```
-    
-  zones       zone_demand_forecast 
-    
- zone_id (PK) zone_id (FK)     
- zone_name      id (PK, UUID)    
- transformer     timestamp      
- _capacity_kw     predicted_kw     
- geom (PostGIS    ev_share_pct     
- MULTIPOLYGON    confidence_lo/hi   
- SRID 4326)     model_version    
-    created_at      
-           
-    
-    
-          charging_recommendation 
-         
-          id (PK, UUID)      
-          zone_id (FK)       
-          hour_slot (023)     
-          action (ENUM)      
-          grid_load_pct      
-          optimal_window      
-          reason          
-          expected_delta_kw    
-          created_at        
-         
-    
-    
-             grid_alert     
-          
-          alert_id (PK, UUID)   
-          zone_id (FK)       
-          severity (ENUM)     
-          triggered_at       
-          message         
-          recommended_action    
-          acknowledged (bool)   
-          resolved (bool)     
-          
+```mermaid
+erDiagram
+    zones ||--o{ zone_demand_forecast : "has forecasts"
+    zones ||--o{ charging_recommendation : "receives"
+    zones ||--o{ grid_alert : "triggers"
 
+    zones {
+        uuid zone_id PK
+        string zone_name
+        float transformer_capacity_kw
+        geometry geom "PostGIS MultiPolygon"
+    }
 
-  infra_site_candidate  
+    zone_demand_forecast {
+        uuid id PK
+        uuid zone_id FK
+        timestamp timestamp
+        float predicted_kw
+        float ev_share_pct
+        float confidence_lo
+        float confidence_hi
+        string model_version
+    }
 
- site_id (PK)       
- lat, lon         
- ward_name        
- demand_score        No FK to zones (standalone)
- gap_score        
- transformer_score    
- access_score       
- composite_rank      
- composite_score     
- nearest_transformer_id  
- existing_chargers_500m  
+    charging_recommendation {
+        uuid id PK
+        uuid zone_id FK
+        int hour_slot "0-23"
+        enum action "CHARGE_NOW | DEFER | OPTIMAL"
+        float grid_load_pct
+        string optimal_window
+        string reason
+        float expected_delta_kw
+    }
 
+    grid_alert {
+        uuid alert_id PK
+        uuid zone_id FK
+        enum severity "INFO | WARNING | CRITICAL"
+        timestamp triggered_at
+        string message
+        string recommended_action
+        bool acknowledged
+        bool resolved
+    }
+
+    infra_site_candidate {
+        uuid site_id PK
+        float lat
+        float lon
+        string ward_name
+        float demand_score
+        float gap_score
+    }
 ```
 
 ### Enum Types
@@ -1369,7 +1348,7 @@ The portal will be available at **`http://localhost:3001`**.
 
 The frontend is a **Next.js 16** application using the App Router pattern with React 19. All pages share a persistent sidebar navigation and top bar layout.
 
-### Operator's Daily Workflow How a BESCOM Officer Uses Voltaris AI
+### Operator's Daily Workflow — How a BESCOM Officer Uses Voltaris AI
 
 ```mermaid
 flowchart TD
@@ -1447,7 +1426,7 @@ Interactive GIS planning tool with **2030 Capacity Projection**.
 - **2030 Projection Toggle**: When enabled, the heatmap scales demand by **6.7x** to represent Bengaluru's 2030 target of 23 lakh EVs.
 - **Capacity Overlay**: Highlights zones that will exceed transformer limits without infrastructure expansion.
 
-### Localized Interface (Kannada/English)
+### Localized Interface (Kannada / English)
 
 Voltaris AI is built for BESCOM operators in Bengaluru, many of whom prefer using tools in **Kannada**.
 
