@@ -3,7 +3,9 @@
 import os
 import math
 import logging
+import threading
 from datetime import datetime
+from pathlib import Path
 from typing import Optional
 
 import numpy as np
@@ -18,6 +20,14 @@ from app.config import get_settings
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
+
+# Resolve MODEL_DIR as an absolute path anchored to the repo root so it
+# works regardless of the CWD uvicorn is launched from.
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent  # backend/
+_MODEL_DIR = Path(settings.MODEL_DIR)
+if not _MODEL_DIR.is_absolute():
+    _MODEL_DIR = (_REPO_ROOT / _MODEL_DIR).resolve()
+_MODEL_DIR.mkdir(parents=True, exist_ok=True)
 
 FEATURE_NAMES = [
     "hour", "day_of_week", "month", "is_weekend",
@@ -49,10 +59,11 @@ class ForecastService:
         self._model_hi: Optional[XGBRegressor] = None
         self._encoder: Optional[LabelEncoder] = None
         self._loaded = False
+        self._lock = threading.Lock()  # prevents double-training under --reload / multi-thread
 
     # ── persistence helpers ──────────────────────────────────────────────
     def _model_path(self, name: str) -> str:
-        return os.path.join(settings.MODEL_DIR, name)
+        return str(_MODEL_DIR / name)
 
     def _models_exist(self) -> bool:
         return all(
@@ -97,17 +108,22 @@ class ForecastService:
 
     # ── load ─────────────────────────────────────────────────────────────
     def load_models(self):
+        # Fast path — already loaded in this process
         if self._loaded:
             return
-        if not self._models_exist():
-            logger.warning("Models not found — training from scratch …")
-            self.train()
-        self._model = joblib.load(self._model_path("forecast_model.pkl"))
-        self._model_lo = joblib.load(self._model_path("forecast_model_lo.pkl"))
-        self._model_hi = joblib.load(self._model_path("forecast_model_hi.pkl"))
-        self._encoder = joblib.load(self._model_path("zone_encoder.pkl"))
-        self._loaded = True
-        logger.info("Forecast models loaded (version %s)", settings.MODEL_VERSION)
+        with self._lock:
+            # Re-check inside the lock (another thread may have just finished)
+            if self._loaded:
+                return
+            if not self._models_exist():
+                logger.warning("Models not found — training from scratch …")
+                self.train()
+            self._model = joblib.load(self._model_path("forecast_model.pkl"))
+            self._model_lo = joblib.load(self._model_path("forecast_model_lo.pkl"))
+            self._model_hi = joblib.load(self._model_path("forecast_model_hi.pkl"))
+            self._encoder = joblib.load(self._model_path("zone_encoder.pkl"))
+            self._loaded = True
+            logger.info("Forecast models loaded from %s (version %s)", _MODEL_DIR, settings.MODEL_VERSION)
 
     # ── train ────────────────────────────────────────────────────────────
     def train(self) -> dict:
