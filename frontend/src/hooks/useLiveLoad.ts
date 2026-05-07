@@ -1,6 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-const WS_URL = (process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000').replace('http', 'ws');
+const getWsUrl = () => {
+  const envUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+  if (envUrl.startsWith('ws')) return envUrl;
+  return envUrl.replace(/^http/, 'ws');
+};
+
+const WS_URL = getWsUrl();
 
 interface LiveLoadFrame {
   zone_id: string;

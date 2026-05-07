@@ -46,7 +46,8 @@ export const ChatWidget: React.FC = () => {
     setMessages((prev) => [...prev, assistantMessage]);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+      const apiUrl = envUrl.startsWith('ws') ? envUrl.replace(/^ws/, 'http') : envUrl;
       const response = await fetch(`${apiUrl}/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

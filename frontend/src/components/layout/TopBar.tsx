@@ -38,7 +38,10 @@ export default function TopBar() {
   useEffect(() => {
     const checkApi = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8000'}/health`, { signal: AbortSignal.timeout(3000) });
+        const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+        const baseUrl = envUrl.replace('/api', '');
+        const healthUrl = baseUrl.startsWith('ws') ? baseUrl.replace(/^ws/, 'http') : baseUrl;
+        const res = await fetch(`${healthUrl}/health`, { signal: AbortSignal.timeout(3000) });
         setApiOk(res.ok);
       } catch {
         setApiOk(false);

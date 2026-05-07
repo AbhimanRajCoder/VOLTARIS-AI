@@ -4,7 +4,15 @@ import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Copy, ShieldCheck, Sparkles, Workflow } from 'lucide-react';
 
 const BASE_URL = 'https://api.gridwise.in/api/deflect';
-const LIVE_API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const getLiveApiBase = () => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  if (envUrl.startsWith('ws')) {
+    return envUrl.replace(/^ws/, 'http');
+  }
+  return envUrl;
+};
+
+const LIVE_API_BASE = getLiveApiBase();
 
 const navItems = [
   'Overview',

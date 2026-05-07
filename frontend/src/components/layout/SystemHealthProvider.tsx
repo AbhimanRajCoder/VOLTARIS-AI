@@ -3,7 +3,17 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Loader2, AlertCircle, RefreshCw, Zap } from 'lucide-react';
 
-const API_HEALTH_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api').replace('/api', '') + '/health';
+const getHealthUrl = () => {
+  const envUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+  const baseUrl = envUrl.replace('/api', '');
+  // Ensure we use http/https for fetch, even if ws/wss was provided
+  if (baseUrl.startsWith('ws')) {
+    return baseUrl.replace(/^ws/, 'http') + '/health';
+  }
+  return baseUrl + '/health';
+};
+
+const API_HEALTH_URL = getHealthUrl();
 
 export default function SystemHealthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<'loading' | 'online' | 'offline'>('loading');
