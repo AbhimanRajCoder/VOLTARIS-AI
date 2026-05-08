@@ -11,11 +11,15 @@ COPY app/ app/
 COPY train.py pretrain_models.py _pretrain_build.py ./
 RUN mkdir -p models
 
-# Pre-train models at IMAGE BUILD TIME using real Supabase credentials.
-# The .pkl files are baked into the image layer so Render's ephemeral
-# filesystem never causes "models not found" on deploy/restart.
-# _pretrain_build.py uses the synthetic fallback if DB is unreachable.
-RUN python _pretrain_build.py
+# Pre-train models at IMAGE BUILD TIME using synthetic data.
+# Dummy env vars satisfy pydantic Settings validation; the DB connection
+# fails immediately and _pretrain_build.py uses the synthetic fallback.
+# The .pkl files are baked into the image so Render's ephemeral filesystem
+# never causes "models not found" on deploy or restart.
+RUN DATABASE_URL="postgresql://u:p@localhost/db" \
+    SUPABASE_URL="https://placeholder.supabase.co" \
+    SUPABASE_ANON_KEY="placeholder" \
+    python _pretrain_build.py
 
 # Production server: no --reload, single worker per container
 # (Render scales horizontally via multiple instances, not via workers)
