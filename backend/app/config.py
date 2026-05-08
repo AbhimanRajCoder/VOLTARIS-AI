@@ -37,32 +37,29 @@ class Settings(BaseSettings):
     def sqlalchemy_engine(self):
         """Returns a cached SQLAlchemy engine tuned for Supabase's connection limits.
 
-        Supabase transaction-mode pooler (port 6543) supports many logical
-        connections but has a physical pool_size cap per plan.  Session-mode
-        (port 5432) is capped at 15 total.  We keep the SQLAlchemy pool tiny
-        so we never exceed that cap even under multi-worker deploys.
+        Uses session-mode pooler (port 5432) because psycopg2 is incompatible
+        with PgBouncer transaction mode (port 6543) — it requires the server
+        to return client_encoding in the startup response.
 
-        Rule of thumb for Supabase free tier (session mode, 15 cap):
-          pool_size = floor(15 / workers) - 1  →  floor(15/2) - 1 = 6
-        For transaction mode (port 6543) this is much more relaxed.
+        Session mode is capped at 15 connections on Supabase free tier.
+        With 1 uvicorn worker: pool_size(5) + max_overflow(3) = 8 max,
+        leaving 7 slots for Supabase dashboard, migrations, etc.
         """
         global _ENGINE_CACHE
         if _ENGINE_CACHE is None:
             from sqlalchemy import create_engine, event
             _ENGINE_CACHE = create_engine(
                 self.DATABASE_URL,
-                # ── Pool sizing ────────────────────────────────────────────
-                # Keep small to avoid EMAXCONNSESSION on Supabase.
-                # With 2 uvicorn workers: 2 × (pool_size + max_overflow) must
-                # stay well below Supabase's hard limit (15 for session mode,
-                # much higher for transaction mode on port 6543).
-                pool_size=3,          # persistent connections per worker
-                max_overflow=2,       # burst connections above pool_size
+                # ── Pool sizing (session mode, 1 worker) ──────────────────
+                # Supabase free tier: 15 session-mode connections max.
+                # 1 worker × (5 + 3) = 8 connections at peak burst.
+                pool_size=5,          # persistent connections
+                max_overflow=3,       # burst connections above pool_size
                 # ── Resilience ─────────────────────────────────────────────
                 pool_pre_ping=True,   # validate connections before use
-                pool_recycle=1800,    # recycle connections every 30 min
+                pool_recycle=300,     # recycle every 5 min (Supabase drops idle conns)
                 pool_timeout=10,      # fail fast instead of hanging 30s
-                pool_use_lifo=True,   # reuse warm connections; idle ones are closed sooner
+                pool_use_lifo=True,   # reuse warm connections; idle ones close sooner
                 connect_args={"sslmode": "require", "connect_timeout": 10},
             )
 
