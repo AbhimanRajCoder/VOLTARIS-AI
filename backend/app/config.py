@@ -35,18 +35,37 @@ class Settings(BaseSettings):
 
     @property
     def sqlalchemy_engine(self):
-        """Returns a cached SQLAlchemy engine configured for Supabase connection pooling."""
+        """Returns a cached SQLAlchemy engine tuned for Supabase's connection limits.
+
+        Supabase transaction-mode pooler (port 6543) supports many logical
+        connections but has a physical pool_size cap per plan.  Session-mode
+        (port 5432) is capped at 15 total.  We keep the SQLAlchemy pool tiny
+        so we never exceed that cap even under multi-worker deploys.
+
+        Rule of thumb for Supabase free tier (session mode, 15 cap):
+          pool_size = floor(15 / workers) - 1  →  floor(15/2) - 1 = 6
+        For transaction mode (port 6543) this is much more relaxed.
+        """
         global _ENGINE_CACHE
         if _ENGINE_CACHE is None:
             from sqlalchemy import create_engine, event
             _ENGINE_CACHE = create_engine(
                 self.DATABASE_URL,
-                pool_pre_ping=True,
-                pool_size=10,
-                max_overflow=20,
-                connect_args={"sslmode": "require"}
+                # ── Pool sizing ────────────────────────────────────────────
+                # Keep small to avoid EMAXCONNSESSION on Supabase.
+                # With 2 uvicorn workers: 2 × (pool_size + max_overflow) must
+                # stay well below Supabase's hard limit (15 for session mode,
+                # much higher for transaction mode on port 6543).
+                pool_size=3,          # persistent connections per worker
+                max_overflow=2,       # burst connections above pool_size
+                # ── Resilience ─────────────────────────────────────────────
+                pool_pre_ping=True,   # validate connections before use
+                pool_recycle=1800,    # recycle connections every 30 min
+                pool_timeout=10,      # fail fast instead of hanging 30s
+                pool_use_lifo=True,   # reuse warm connections; idle ones are closed sooner
+                connect_args={"sslmode": "require", "connect_timeout": 10},
             )
-            
+
             @event.listens_for(_ENGINE_CACHE, "connect")
             def set_read_write(dbapi_connection, connection_record):
                 """Force session to read-write mode to bypass Supabase read-only defaults."""
@@ -57,7 +76,7 @@ class Settings(BaseSettings):
                     pass
                 finally:
                     cursor.close()
-                    
+
         return _ENGINE_CACHE
 
 _ENGINE_CACHE = None

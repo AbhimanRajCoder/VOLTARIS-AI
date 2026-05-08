@@ -23,7 +23,12 @@ from app.utils.db import SessionLocal
 
 
 async def monitor_grid_alerts() -> None:
-    """Create unresolved alerts for zones that breach configured thresholds."""
+    """Create unresolved alerts for zones that breach configured thresholds.
+
+    Connection discipline: open a session, do all work, close it,
+    *then* sleep.  This ensures zero connections are held during the
+    60-second idle period between cycles.
+    """
     while True:
         db = SessionLocal()
         try:
@@ -130,6 +135,10 @@ async def monitor_grid_alerts() -> None:
         except Exception as exc:
             print(f"Alert monitor error: {exc}")
         finally:
+            # ✔ Always return the connection to the pool before sleeping.
+            # This is the critical fix: the 60-second sleep must never hold
+            # an open connection; that would waste 1/15 of Supabase's cap.
             db.close()
 
+        # Sleep with NO connection held.
         await sleep(60)
