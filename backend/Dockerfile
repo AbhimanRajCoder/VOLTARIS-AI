@@ -8,7 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code and helper scripts
 COPY app/ app/
-COPY .env app/.env
 COPY train.py pretrain_models.py _pretrain_build.py ./
 RUN mkdir -p models
 
